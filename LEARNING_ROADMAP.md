@@ -1,7 +1,7 @@
-# 🧭 LỘ TRÌNH 50 MICRO-TASKS NÂNG CẤP SPRING BOOT (KHUNG TƯ DUY KỸ SƯ 5 CHIỀU)
+# 🧭 LỘ TRÌNH NÂNG CẤP SPRING BOOT THỰC CHIẾN (KHUNG TƯ DUY KỸ SƯ 5 CHIỀU)
 
 > **🎯 Khung Tư Duy 5 Chiều (5D Engineering Framework) ở mỗi bài toán:**
-> 1. 🔬 **[Bản chất & Cơ chế ngầm]**: Bên dưới framework/database thực sự đang làm cái gì?
+> 1. 🔬 **[Bản chất & Cơ chế ngầm]**: Bên dưới framework / database thực sự đang làm cái gì?
 > 2. ⚠️ **[Rủi ro & Bẫy lỗi (Edge Cases)]**: Nếu không làm hoặc làm ẩu thì hệ thống sẽ gãy/sập ở đâu khi tải cao?
 > 3. ⚖️ **[So sánh & Giải pháp khác]**: Có cách tiếp cận nào khác không (DB vs App, thư viện A vs B)?
 > 4. 🔄 **[Sự đánh đổi (Trade-offs)]**: Được cái gì và phải trả giá bằng cái gì (RAM, CPU, I/O, độ phức tạp bảo trì)?
@@ -53,7 +53,7 @@
   1. 🔬 *[Bản chất]:* Xóa vật lý (Hard Delete - `DELETE FROM`) tác động lên Disk/B-Tree Index như thế nào so với Xóa logic (Soft Delete - `UPDATE set is_deleted = true`)?
   2. ⚠️ *[Bẫy lỗi]:* Giả sử cột `category.name` có ràng buộc duy nhất (`UNIQUE`). Bạn có danh mục "Quần Áo" đã xóa mềm (`is_deleted=true`). Khi người dùng tạo một danh mục mới cũng tên "Quần Áo", Database có báo lỗi trùng Unique không? Bạn giải quyết thế nào?
   3. ⚖️ *[So sánh]:* So sánh dùng cờ Boolean (`is_deleted = true/false`) vs dùng Timestamp (`deleted_at = NULL / 2026-08-26 15:00:00`). Kiểu nào lưu trữ được lịch sử xóa tốt hơn?
-  4. 🔄 *[Đánh đổi]:* Dữ liệu xóa mềm vẫn nằm trong DB, làm tăng dung lượng bảng và làm chậm tốc độ quét Index. Cần có giải pháp gì (Partial Index / Data Archiving)?
+  4. 🔄 *[Đánh đổi]:* Dữ liệu xóa mềm vẫn nằm trong DB, làm tăng dung lượng bảng và làm chậm tốc độ quét Index. Cần có chiến lược lưu trữ dữ liệu cũ (Archive) ra sao trong thực tế?
   5. 🏢 *[Thực tế]:* Luật bảo vệ dữ liệu người dùng (như GDPR tại Châu Âu) yêu cầu "Quyền được lãng quên" (Right to be forgotten - phải xóa sạch thông tin cá nhân). Khi đó Soft Delete có bị xem là vi phạm luật không nếu không ẩn danh hóa dữ liệu?
 * **Từ khóa:** `Soft Delete vs Hard Delete`, `Unique Constraint with Soft Delete`, `Partial Index PostgreSQL`.
 
@@ -83,7 +83,7 @@
 
 ---
 
-## 📄 GIAI ĐOẠN 2: Phân Trang & Sắp Xếp Dữ Liệu Chuyên Nghiệp (Tasks 7 - 11)
+## 📄 GIAI ĐOẠN 2: Phân Trang, API Versioning & Sắp Xếp Dữ Liệu (Tasks 7 - 12)
 
 ### 📌 Task 7: Thiết kế DTO chuẩn `PageResponse<T>`
 * **Mục tiêu:** Tạo Generic Class `PageResponse<T>` chứa metadata phân trang chuẩn hóa.
@@ -110,7 +110,7 @@
 ---
 
 ### 📌 Task 9: Thêm tham số phân trang vào Controller
-* **Mục tiêu:** Endpoint `GET /api/products?page=1&size=10&sortBy=price&sortDir=desc`.
+* **Mục tiêu:** Endpoint `GET /api/v1/products?page=1&size=10&sortBy=price&sortDir=desc`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Annotation `@RequestParam(defaultValue = "...")` hoạt động như thế nào khi Client không truyền tham số lên URL?
   2. ⚠️ *[Bẫy lỗi]:* Nếu một User cố tình truyền `size=1000000` (1 triệu), Server của bạn sẽ bị gì nếu không giới hạn `size` tối đa?
@@ -145,9 +145,24 @@
 
 ---
 
-## 🛡️ GIAI ĐOẠN 3: Validation Chuyên Sâu & Xử Lý Ngoại Lệ (Tasks 12 - 16)
+### 📌 Task 12: Chiến Lược API Versioning (Quản Lý Phiên Bản API)
+* **Mục tiêu:** Chuyển đổi toàn bộ endpoint sang tiền tố `/api/v1/...` và tìm hiểu các chiến lược Versioning.
+* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
+  1. 🔬 *[Bản chất]:* Khi ứng dụng di động (Mobile App) của khách hàng chưa kịp cập nhật bản mới, nếu Backend thay đổi cấu trúc JSON Response mà không có Versioning, ứng dụng Mobile của hàng triệu người dùng sẽ bị sập (Crash) ra sao?
+  2. ⚠️ *[Bẫy lỗi]:* Phân biệt giữa **Breaking Change** (Đổi tên trường, xóa trường, đổi kiểu dữ liệu) và **Non-breaking Change** (Thêm trường mới có giá trị mặc định).
+  3. ⚖️ *[So sánh 3 Chiến lược]:*
+     - **URI Path Versioning:** `/api/v1/products` vs `/api/v2/products` (Phổ biến, dễ debug nhất).
+     - **Header Versioning:** `X-API-Version: 2` hoặc `Accept: application/vnd.company.v2+json`.
+     - **Query Parameter:** `/api/products?version=2`.
+  4. 🔄 *[Đánh đổi]:* URI Versioning rất trực quan nhưng làm tăng số lượng Controller khi có nhiều phiên bản. Header Versioning giữ URL sạch nhưng khó test trực tiếp trên thanh địa chỉ trình duyệt.
+  5. 🏢 *[Thực tế]:* Cấu hình `@RequestMapping("/api/v1/products")` cho toàn bộ các Controller hiện tại.
+* **Từ khóa:** `API Versioning Strategies (URI vs Header vs Query)`, `Breaking vs Non-Breaking API Changes`, `Backward Compatibility`.
 
-### 📌 Task 12: Bổ sung Validation định dạng cho `CustomerRequest`
+---
+
+## 🛡️ GIAI ĐOẠN 3: Validation, Exception Handling & Logging Truy Vết (Tasks 13 - 18)
+
+### 📌 Task 13: Bổ sung Validation định dạng cho `CustomerRequest`
 * **Mục tiêu:** Validate Email chuẩn và Số điện thoại Việt Nam bằng Regex.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* `@Pattern(regexp = "...")` của Bean Validation sử dụng thư viện nào phía dưới để đối soát chuỗi (Java `java.util.regex.Pattern`)?
@@ -159,7 +174,7 @@
 
 ---
 
-### 📌 Task 13: Tạo Custom Annotation `@PhoneNumber`
+### 📌 Task 14: Tạo Custom Annotation `@PhoneNumber`
 * **Mục tiêu:** Tự viết Custom Annotation `@PhoneNumber` và class `PhoneNumberValidator`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* `@Constraint(validatedBy = PhoneNumberValidator.class)` liên kết Annotation và class xử lý logic như thế nào trong Bean Validation Engine?
@@ -171,7 +186,7 @@
 
 ---
 
-### 📌 Task 14: Chuẩn hóa thông báo lỗi Validation trong `GlobalExceptionHandler`
+### 📌 Task 15: Chuẩn hóa thông báo lỗi Validation trong `GlobalExceptionHandler`
 * **Mục tiêu:** Trả về danh sách chi tiết lỗi cho từng trường dạng Map `{ "email": "...", "phoneNumber": "..." }`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi một request bị vi phạm validation `@Valid`, Spring ném ra `MethodArgumentNotValidException`. Ngoại lệ này chứa dữ liệu gì từ `BindingResult`?
@@ -180,18 +195,6 @@
   4. 🔄 *[Đánh đổi]:* Việc gom tất cả lỗi trả về 1 lần (Collect All Errors) giúp người dùng sửa form nhanh hơn, nhưng Server phải duyệt qua toàn bộ validation. Có tốn thêm chi phí không?
   5. 🏢 *[Thực tế]:* Đọc thông điệp lỗi đa ngôn ngữ (i18n - Internationalization: Tiếng Việt, Tiếng Anh) từ file `messages.properties` thông qua `MessageSource`.
 * **Từ khóa:** `MethodArgumentNotValidException`, `BindingResult`, `FieldErrors Formatting`, `Spring Boot i18n Validation`.
-
----
-
-### 📌 Task 15: Validate giá trị logic nghiệp vụ cho `ProductRequest`
-* **Mục tiêu:** Đảm bảo `price > 0`, `quantity >= 0`, tên không được toàn dấu cách trắng.
-* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
-  1. 🔬 *[Bản chất]:* Tại sao đối với tiền tệ (`price`), ta bắt buộc phải dùng kiểu dữ liệu `BigDecimal` mà tuyệt đối không được dùng `double` hay `float` trong Java? (Lỗi sai số dấu phẩy động: `0.1 + 0.2 = 0.30000000000000004`).
-  2. ⚠️ *[Bẫy lỗi]:* Phân biệt sự khác nhau giữa `@NotNull`, `@NotEmpty` và `@NotBlank`. Nếu dùng `@NotNull` cho `String name`, người dùng gửi lên `name = "   "` (3 dấu cách) thì có vượt qua được validation không?
-  3. ⚖️ *[So sánh]:* `@DecimalMin(value = "0.0", inclusive = false)` khác gì với `@Min(1)` khi validate giá tiền có số lẻ thập phân?
-  4. 🔄 *[Đánh đổi]:* `BigDecimal` tính toán chính xác tuyệt đối nhưng tốc độ xử lý chậm hơn kiểu nguyên thủy `double`. Tại sao trong hệ thống thương mại/ngân hàng, sự chính xác luôn được ưu tiên hơn micro-giây CPU?
-  5. 🏢 *[Thực tế]:* Trong thực tế, các sàn TMĐT (Shopee, Tiki) giới hạn giá sản phẩm tối thiểu là 1.000 VNĐ và tối đa là 1 tỷ VNĐ để tránh lỗi nhập nhầm của người bán như thế nào?
-* **Từ khóa:** `BigDecimal Precision vs Double`, `@NotBlank vs @NotEmpty vs @NotNull`, `@DecimalMin inclusive`.
 
 ---
 
@@ -207,9 +210,33 @@
 
 ---
 
-## 🔍 GIAI ĐOẠN 4: Truy Vấn Nâng Cao & Tối Ưu Database (Tasks 17 - 23)
+### 📌 Task 17: Ghi Log Chuẩn (SLF4J) & Tự Động Gắn `Trace-Id` Với MDC Filter *(ĐƯỢC ĐẨY LÊN SỚM)*
+* **Mục tiêu:** Tạo `CorrelationIdFilter` tự động gắn `traceId` vào mọi dòng log của cùng một request để phục vụ debug các giai đoạn sau.
+* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
+  1. 🔬 *[Bản chất SLF4J]:* SLF4J là Logging Facade (Giao diện) còn Logback là Implementation. Tại sao trong code ta chỉ gọi `log.info(...)` của SLF4J mà không gọi trực tiếp Logback?
+  2. ⚠️ *[Vấn đề Thực tế]:* Khi có 5.000 người dùng cùng bấm đặt hàng trong 1 giây, log in ra terminal xen lẫn nhau. Nhờ có `traceId` xuất hiện ở đầu mỗi dòng log, làm sao ta lọc ra được toàn bộ hành trình của đúng 1 request bị lỗi?
+  3. 🔬 *[Cơ chế MDC]:* Cơ chế **MDC (Mapped Diagnostic Context)** của SLF4J lưu trữ dữ liệu theo từng luồng (`ThreadLocal`) như thế nào để mọi lệnh `log.info()` trong Controller/Service đều tự động in kèm mã `[TraceID: 3a7b-8c9d]` ở đầu dòng?
+  4. ⚠️ *[Bẫy lỗi Memory Leak]:* Tại sao **BẮT BUỘC PHẢI GỌI `MDC.clear()`** trong khối `finally` của Filter? (Gợi ý: Tomcat tái sử dụng Thread từ Thread Pool, nếu không clear thì request sau sẽ bị dính `traceId` của request trước).
+  5. 🏢 *[Thực tế]:* Trả kèm header `X-Correlation-ID: 3a7b-8c9d` trong Response để khi Frontend gặp lỗi có thể đưa mã này cho Backend tra cứu log ngay lập tức.
+* **Từ khóa:** `SLF4J Logger`, `MDC (Mapped Diagnostic Context)`, `Correlation ID Distributed Tracing Pattern`, `ThreadLocal Memory Leak Prevention with MDC.clear()`.
 
-### 📌 Task 17: Viết câu truy vấn JPQL tùy biến đầu tiên với `@Query`
+---
+
+### 📌 Task 18: Validate giá trị logic nghiệp vụ cho `ProductRequest`
+* **Mục tiêu:** Đảm bảo `price > 0`, `quantity >= 0`, tên không được toàn dấu cách trắng.
+* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
+  1. 🔬 *[Bản chất]:* Tại sao đối với tiền tệ (`price`), ta bắt buộc phải dùng kiểu dữ liệu `BigDecimal` mà tuyệt đối không được dùng `double` hay `float` trong Java? (Lỗi sai số dấu phẩy động: `0.1 + 0.2 = 0.30000000000000004`).
+  2. ⚠️ *[Bẫy lỗi]:* Phân biệt sự khác nhau giữa `@NotNull`, `@NotEmpty` và `@NotBlank`. Nếu dùng `@NotNull` cho `String name`, người dùng gửi lên `name = "   "` (3 dấu cách) thì có vượt qua được validation không?
+  3. ⚖️ *[So sánh]:* `@DecimalMin(value = "0.0", inclusive = false)` khác gì với `@Min(1)` khi validate giá tiền có số lẻ thập phân?
+  4. 🔄 *[Đánh đổi]:* `BigDecimal` tính toán chính xác tuyệt đối nhưng tốc độ xử lý chậm hơn kiểu nguyên thủy `double`. Tại sao trong hệ thống thương mại/ngân hàng, sự chính xác luôn được ưu tiên hơn micro-giây CPU?
+  5. 🏢 *[Thực tế]:* Trong thực tế, các sàn TMĐT (Shopee, Tiki) giới hạn giá sản phẩm tối thiểu là 1.000 VNĐ và tối đa là 1 tỷ VNĐ để tránh lỗi nhập nhầm của người bán như thế nào?
+* **Từ khóa:** `BigDecimal Precision vs Double`, `@NotBlank vs @NotEmpty vs @NotNull`, `@DecimalMin inclusive`.
+
+---
+
+## 🔍 GIAI ĐOẠN 4: Truy Vấn Nâng Cao, Phát Hiện N+1 & Tối Ưu Database (Tasks 19 - 26)
+
+### 📌 Task 19: Viết câu truy vấn JPQL tùy biến đầu tiên với `@Query`
 * **Mục tiêu:** Viết hàm tìm sản phẩm có giá trong khoảng `minPrice` đến `maxPrice`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* JPQL (`Java Persistence Query Language`) thao tác trên các **Entity và thuộc tính của Java Class** hay thao tác trên các **Bảng và Cột vật lý trong SQL**?
@@ -221,7 +248,7 @@
 
 ---
 
-### 📌 Task 18: Viết câu JPQL tìm kiếm sản phẩm theo tên danh mục
+### 📌 Task 20: Viết câu JPQL tìm kiếm sản phẩm theo tên danh mục
 * **Mục tiêu:** Lấy danh sách sản phẩm thuộc về một danh mục theo tên (`category.name`).
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi bạn viết `SELECT p FROM Product p WHERE p.category.name = :name`, Hibernate tự động sinh câu lệnh SQL `INNER JOIN` hay `CROSS JOIN` bên dưới?
@@ -233,7 +260,19 @@
 
 ---
 
-### 📌 Task 19: Tối ưu bộ nhớ với DTO Projection
+### 📌 Task 21: Phát Hiện & Đo Lường Lỗi N+1 Query Thực Tế *(MỚI BỔ SUNG)*
+* **Mục tiêu:** Kích hoạt Hibernate Statistics để đếm chính xác số lượng câu query phát sinh trong từng request.
+* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
+  1. 🔬 *[Bản chất]:* Cấu hình `spring.jpa.properties.hibernate.generate_statistics=true` cung cấp những chỉ số thống kê nào (Số lượng query, Thời gian thực thi, Session open time, Flushes count)?
+  2. ⚠️ *[Thực hành bắt N+1]:* Tạo 10 Order, mỗi Order có 1 Customer. Viết hàm load 10 Order và lặp qua gọi `order.getCustomer().getName()`. Quan sát log: Có đúng $1 + 10 = 11$ câu query bị bắn xuống DB không?
+  3. 🔬 *[Công cụ Chuyên nghiệp]:* Giới thiệu về **Hypersistence Optimizer** (của Vlad Mihalcea) và thư viện **QuickPerf** giúp tự động phát hiện N+1 và fail Unit Test nếu số lượng query vượt quá 1 câu ra sao?
+  4. ⚖️ *[So sánh]:* Chi phí của 1 câu query lấy 100 dòng vs 100 câu query lấy 1 dòng. Tại sao 100 câu query lại chậm hơn gấp 20 lần? (Network Round-Trip Time - RTT và Database Connection Handshake).
+  5. 🏢 *[Thực tế]:* Sửa lại hàm trên bằng `JOIN FETCH` và quan sát log thống kê: Số lượng query giảm từ 11 câu xuống đúng 1 câu duy nhất!
+* **Từ khóa:** `hibernate.generate_statistics=true`, `N+1 Query Detection`, `QuickPerf Assertion`, `Network Round-Trip Time (RTT)`.
+
+---
+
+### 📌 Task 22: Tối ưu bộ nhớ với DTO Projection
 * **Mục tiêu:** Viết câu truy vấn SELECT thẳng vào DTO tóm tắt `ProductSummaryResponse`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi dùng `SELECT new com.example...Dto(p.id, p.name, p.price)`, Hibernate có đưa các Entity vào `Persistence Context` (First-Level Cache / Dirty Checking) không? (Tại sao việc này giúp giải phóng bộ nhớ RAM cực lớn?).
@@ -245,7 +284,7 @@
 
 ---
 
-### 📌 Task 20: Làm quen với JPA Specification (Criteria API)
+### 📌 Task 23: Làm quen với JPA Specification (Criteria API)
 * **Mục tiêu:** Tạo class `ProductSpecification` chứa điều kiện lọc `hasCategory(Long categoryId)`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Interface `Specification<Product>` hoạt động dựa trên Java Criteria API. Ba đối tượng `Root<Product>`, `CriteriaQuery<?>`, `CriteriaBuilder` đóng vai trò gì tương ứng trong câu lệnh SQL (`FROM`, `SELECT`, `WHERE/AND/OR`)?
@@ -257,7 +296,7 @@
 
 ---
 
-### 📌 Task 21: Thêm điều kiện lọc khoảng giá và tên vào `ProductSpecification`
+### 📌 Task 24: Thêm điều kiện lọc khoảng giá và tên vào `ProductSpecification`
 * **Mục tiêu:** Viết các method tĩnh `priceGreaterThanOrEqualTo`, `priceLessThanOrEqualTo`, `nameLike`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Trong CriteriaBuilder, phương thức `like()` khác `equal()` ở điểm nào? Làm sao để tìm kiếm không phân biệt chữ hoa chữ thường (`criteriaBuilder.lower()`)?
@@ -269,8 +308,8 @@
 
 ---
 
-### 📌 Task 22: Ghép nối Specification thành API Tìm Kiếm Linh Hoạt
-* **Mục tiêu:** Endpoint `GET /api/products/search?categoryId=1&minPrice=100&maxPrice=500&name=phone`.
+### 📌 Task 25: Ghép nối Specification thành API Tìm Kiếm Linh Hoạt
+* **Mục tiêu:** Endpoint `GET /api/v1/products/search?categoryId=1&minPrice=100&maxPrice=500&name=phone`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Phương thức `Specification.where(spec1).and(spec2).and(spec3)` tự động gộp các điều kiện bằng toán tử `AND` và loại bỏ các điều kiện `null` như thế nào?
   2. ⚠️ *[Bẫy lỗi]:* Khi truyền cả Specification và `Pageable` vào `productRepository.findAll(spec, pageable)`, Spring Data JPA tự động tính toán câu `COUNT(*)` đi kèm với các điều kiện lọc tương ứng ra sao?
@@ -281,7 +320,7 @@
 
 ---
 
-### 📌 Task 23: Đánh Index Database và phân tích bằng `EXPLAIN ANALYZE`
+### 📌 Task 26: Đánh Index Database và phân tích bằng `EXPLAIN ANALYZE`
 * **Mục tiêu:** Đánh Index trên cột `name`, `category_id`, `created_at` và đo hiệu năng.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Cấu trúc dữ liệu **B-Tree Index** trong PostgreSQL tổ chức dữ liệu như thế nào để giảm độ phức tạp tìm kiếm từ $O(N)$ xuống $O(\log N)$?
@@ -293,9 +332,9 @@
 
 ---
 
-## 🛒 GIAI ĐOẠN 5: Nghiệp Vụ Chặt Chẽ & Xử Lý Giao Dịch Đa Luồng (Tasks 24 - 30)
+## 🛒 GIAI ĐOẠN 5: Nghiệp Vụ Chặt Chẽ & Xử Lý Giao Dịch Đa Luồng (Tasks 27 - 33)
 
-### 📌 Task 24: Thiết kế Luồng Vòng Đời Trạng Thái Đơn Hàng
+### 📌 Task 27: Thiết kế Luồng Vòng Đời Trạng Thái Đơn Hàng
 * **Mục tiêu:** Xây dựng State Diagram cho enum `OrderStatus`: `PENDING` $\rightarrow$ `CONFIRMED` $\rightarrow$ `SHIPPED` $\rightarrow$ `DELIVERED` / `CANCELLED`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khái niệm **State Machine (Máy trạng thái hữu hạn)** giúp bảo vệ dữ liệu nghiệp vụ không bị nhảy cóc trạng thái như thế nào?
@@ -307,7 +346,7 @@
 
 ---
 
-### 📌 Task 25: Viết hàm Validate Chuyển Trạng Thái Trong `OrderService`
+### 📌 Task 28: Viết hàm Validate Chuyển Trạng Thái Trong `OrderService`
 * **Mục tiêu:** Cài đặt phương thức `boolean canTransitionTo(OrderStatus nextStatus)` trong Enum và kiểm tra ở Service.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Sử dụng `EnumSet<OrderStatus>` trong Java mang lại hiệu năng so sánh bitwise siêu nhanh như thế nào?
@@ -319,7 +358,7 @@
 
 ---
 
-### 📌 Task 26: Tìm hiểu cơ chế Rollback của `@Transactional`
+### 📌 Task 29: Tìm hiểu cơ chế Rollback của `@Transactional`
 * **Mục tiêu:** Hiểu sâu về cách Spring quản lý Commit và Rollback qua Proxy AOP.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* `@Transactional` tạo ra một Dynamic Proxy bọc lấy hàm Service. Khối code `try { target.method(); tx.commit(); } catch (Throwable t) { tx.rollback(); }` hoạt động bên dưới ra sao?
@@ -331,7 +370,7 @@
 
 ---
 
-### 📌 Task 27: Tạo kịch bản lỗi giả lập để kiểm chứng Rollback
+### 📌 Task 30: Tạo kịch bản lỗi giả lập để kiểm chứng Rollback
 * **Mục tiêu:** Viết kịch bản tạo đơn hàng bị lỗi ở bước cuối và kiểm tra tính toàn vẹn của DB.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Tính **Atomicity (Nguyên tử)** trong chuẩn ACID bảo đảm điều gì khi 1 giao dịch gồm 10 câu lệnh SQL nhưng câu thứ 10 bị lỗi?
@@ -343,7 +382,7 @@
 
 ---
 
-### 📌 Task 28: Tìm hiểu lỗi Tranh Chấp Tồn Kho (Race Condition)
+### 📌 Task 31: Tìm hiểu lỗi Tranh Chấp Tồn Kho (Race Condition)
 * **Mục tiêu:** Mô phỏng tình huống 2 khách hàng cùng mua 1 sản phẩm cuối cùng tại cùng 1 thời điểm.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Vấn đề **Lost Update (Mất dữ liệu cập nhật)**: Luồng 1 đọc `quantity = 1`, Luồng 2 đọc `quantity = 1`. Cả 2 đều trừ 1 thành 0 và ghi đè lên nhau. Tại sao ở môi trường đơn luồng (test 1 mình) bạn không bao giờ phát hiện được lỗi này?
@@ -355,7 +394,7 @@
 
 ---
 
-### 📌 Task 29: Áp dụng Khóa Lạc Quan (Optimistic Lock với `@Version`)
+### 📌 Task 32: Áp dụng Khóa Lạc Quan (Optimistic Lock với `@Version`)
 * **Mục tiêu:** Thêm trường `@Version private Long version;` vào Entity `Product`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Hibernate tự động thêm điều kiện `WHERE id = ? AND version = ?` vào câu `UPDATE` như thế nào? Khi update thành công thì trường `version` tự động tăng lên mấy đơn vị?
@@ -367,7 +406,7 @@
 
 ---
 
-### 📌 Task 30: Bắt lỗi `OptimisticLockingFailureException` & Chiến lược Thử Lại (Retry)
+### 📌 Task 33: Bắt lỗi `OptimisticLockingFailureException` & Chiến lược Thử Lại (Retry)
 * **Mục tiêu:** Bắt ngoại lệ xung đột ở `GlobalExceptionHandler` và tìm hiểu Spring Retry.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi gặp `OptimisticLockingFailureException`, việc ném lỗi ngay cho Client bắt họ bấm lại khác gì với việc Server tự động nạp lại dữ liệu mới và thử trừ kho lại 3 lần (Retry Pattern)?
@@ -379,9 +418,9 @@
 
 ---
 
-## 🔐 GIAI ĐOẠN 6: Bảo Mật Với Spring Security 6 & JWT (Tasks 31 - 38)
+## 🔐 GIAI ĐOẠN 6: Bảo Mật Với Spring Security 6 & JWT (Tasks 34 - 41)
 
-### 📌 Task 31: Thiết kế Entity `User` và `Role`
+### 📌 Task 34: Thiết kế Entity `User` và `Role`
 * **Mục tiêu:** Tạo bảng `users` (`id`, `username`, `password`, `email`, `role`, `isActive`).
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Trong Spring Security, interface `UserDetails` và `GrantedAuthority` yêu cầu những phương thức bắt buộc nào (`getUsername`, `getPassword`, `getAuthorities`, `isAccountNonLocked`...)?
@@ -393,19 +432,19 @@
 
 ---
 
-### 📌 Task 32: Mã hóa mật khẩu với `BCryptPasswordEncoder` & Viết API Đăng Ký
+### 📌 Task 35: Mã hóa mật khẩu với `BCryptPasswordEncoder` & Viết API Đăng Ký
 * **Mục tiêu:** Khai báo Bean `PasswordEncoder` và mã hóa mật khẩu trước khi lưu vào DB.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Hàm băm một chiều (One-way Hash Function) là gì? Tại sao không có hàm "giải mã" (Decrypt) một chuỗi BCrypt về mật khẩu ban đầu?
   2. ⚠️ *[Bẫy lỗi]:* Tại sao lưu mật khẩu dạng Plain text ("123456") hay dùng mã hóa 2 chiều (AES/DES lưu key trong code) là thảm họa bảo mật tồi tệ nhất của một hệ thống?
   3. 🔬 *[Cơ chế Salt]:* Chuỗi băm BCrypt luôn có dạng `$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy`. Cấu trúc này chứa những phần nào (Thuật toán, Chi phí băm Cost/Rounds, Salt 16 bytes, Hash value)?
   4. ⚖️ *[So sánh]:* Tại sao BCrypt được thiết kế cố tình chạy **chậm** (khoảng 50-100 mili-giây cho 1 lần băm) thay vì siêu nhanh như MD5/SHA-256? (Chống lại các dàn máy đào GPU tấn công Brute-force hàng tỷ mật khẩu/giây).
-  5. 🏢 *[Thực tế]:* Viết API `POST /api/auth/register`, kiểm tra trùng `username`/`email`, mã hóa mật khẩu bằng `passwordEncoder.encode(rawPassword)` và lưu vào DB.
+  5. 🏢 *[Thực tế]:* Viết API `POST /api/v1/auth/register`, kiểm tra trùng `username`/`email`, mã hóa mật khẩu bằng `passwordEncoder.encode(rawPassword)` và lưu vào DB.
 * **Từ khóa:** `BCryptPasswordEncoder Salt Mechanism`, `One-way Hash vs Two-way Encryption`, `Brute-force & Rainbow Table Resistance`.
 
 ---
 
-### 📌 Task 33: Tích hợp thư viện JWT & Viết `JwtTokenProvider`
+### 📌 Task 36: Tích hợp thư viện JWT & Viết `JwtTokenProvider`
 * **Mục tiêu:** Viết class sinh và xác thực JSON Web Token (JWT).
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* JWT gồm 3 phần: `Header.Payload.Signature`. Phần nào được mã hóa? Phần nào chỉ là Base64Url-encoded (ai cũng có thể đọc được nội dung trên trang jwt.io)?
@@ -417,7 +456,7 @@
 
 ---
 
-### 📌 Task 34: Viết API Đăng Nhập (`POST /api/auth/login`)
+### 📌 Task 37: Viết API Đăng Nhập (`POST /api/v1/auth/login`)
 * **Mục tiêu:** Nhận `username` + `password`, đối soát mật khẩu và trả về Token.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Phương thức `passwordEncoder.matches(rawPassword, encodedPasswordFromDB)` kiểm tra tính đúng đắn của mật khẩu như thế nào mà không cần giải mã chuỗi băm trong DB?
@@ -429,7 +468,7 @@
 
 ---
 
-### 📌 Task 35: Viết `JwtAuthenticationFilter` (`OncePerRequestFilter`)
+### 📌 Task 38: Viết `JwtAuthenticationFilter` (`OncePerRequestFilter`)
 * **Mục tiêu:** Đón bắt mọi request, trích xuất Header `Authorization`, xác thực Token và nạp thông tin vào Spring Context.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Tại sao filter này phải kế thừa `OncePerRequestFilter` thay vì `GenericFilterBean`? (Đảm bảo filter chỉ thực thi đúng 1 lần duy nhất cho mỗi HTTP request, kể cả khi có forward nội bộ).
@@ -441,31 +480,31 @@
 
 ---
 
-### 📌 Task 36: Cấu hình `SecurityFilterChain` trong Spring Security 6
+### 📌 Task 39: Cấu hình `SecurityFilterChain` trong Spring Security 6
 * **Mục tiêu:** Cấu hình mở public các API cần thiết và kích hoạt Filter kiểm tra Token.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Trong Spring Security 6 (dùng cú pháp Lambda DSL hiện đại), tại sao class cấu hình không còn kế thừa `WebSecurityConfigurerAdapter` (đã bị xóa bỏ)?
   2. ⚠️ *[Bản chất CSRF]:* Tại sao với REST API stateless dùng JWT, ta lại cấu hình `csrf(csrf -> csrf.disable())`? Cơ chế tấn công CSRF dựa vào Cookie trình duyệt tự gửi kèm, còn Header `Authorization` trình duyệt có tự gửi kèm không?
   3. 🔬 *[Quản lý Session]:* Cấu hình `sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))` ngăn Spring Boot tự động tạo và lưu trữ `HttpSession` trong RAM như thế nào?
   4. ⚖️ *[So sánh]:* Thứ tự của Filter: Tại sao bắt buộc phải đặt `addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)`?
-  5. 🏢 *[Thực tế]:* Cấu hình phân luồng: Cho phép truy cập tự do (`permitAll`) vào Swagger UI (`/v3/api-docs/**`, `/swagger-ui/**`), API Auth (`/api/auth/**`), và các API GET xem sản phẩm công khai.
+  5. 🏢 *[Thực tế]:* Cấu hình phân luồng: Cho phép truy cập tự do (`permitAll`) vào Swagger UI (`/v3/api-docs/**`, `/swagger-ui/**`), API Auth (`/api/v1/auth/**`), và các API GET xem sản phẩm công khai.
 * **Từ khóa:** `SecurityFilterChain Lambda DSL Spring Boot 3`, `CSRF Disable Justification for JWT`, `SessionCreationPolicy.STATELESS`, `addFilterBefore`.
 
 ---
 
-### 📌 Task 37: Phân quyền API với `@PreAuthorize`
+### 📌 Task 40: Phân quyền API với `@PreAuthorize`
 * **Mục tiêu:** Bật `@EnableMethodSecurity` và phân quyền chi tiết cho từng method Controller.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Annotation `@EnableMethodSecurity` sử dụng Spring AOP để chặn trước khi gọi method (Pre-invocation authorization check) bằng ngôn ngữ biểu thức SpEL (Spring Expression Language) ra sao?
-  2. ⚠️ *[Kiểm tra]:* Gắn `@PreAuthorize("hasRole('ADMIN')")` cho API `POST /api/products`. Thử đăng nhập bằng tài khoản `CUSTOMER`, lấy Token gọi API này: Spring Security trả về mã HTTP nào (`403 Forbidden` hay `401 Unauthorized`)?
-  3. ⚖️ *[So sánh]:* Phân quyền tập trung trong file cấu hình (`authorizeHttpRequests(auth -> auth.requestMatchers("/api/admin/**").hasRole("ADMIN"))`) vs Phân quyền phân tán ngay trên đầu method (`@PreAuthorize`). Ưu và nhược điểm của mỗi cách?
+  2. ⚠️ *[Kiểm tra]:* Gắn `@PreAuthorize("hasRole('ADMIN')")` cho API `POST /api/v1/products`. Thử đăng nhập bằng tài khoản `CUSTOMER`, lấy Token gọi API này: Spring Security trả về mã HTTP nào (`403 Forbidden` hay `401 Unauthorized`)?
+  3. ⚖️ *[So sánh]:* Phân quyền tập trung trong file cấu hình (`authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/admin/**").hasRole("ADMIN"))`) vs Phân quyền phân tán ngay trên đầu method (`@PreAuthorize`). Ưu và nhược điểm của mỗi cách?
   4. 🏢 *[Kiểm tra quyền sở hữu]:* Viết biểu thức SpEL phức tạp kiểm tra người dùng chỉ được xem đơn hàng của chính mình: `@PreAuthorize("hasRole('ADMIN') or #customerId == authentication.principal.id")`.
   5. 🏢 *[Thực tế]:* Phân biệt rõ: **401 Unauthorized** (Bạn chưa chứng minh được bạn là ai - Chưa đăng nhập) vs **403 Forbidden** (Tôi biết bạn là ai, nhưng bạn không đủ quyền hạn thực hiện hành động này).
 * **Từ khóa:** `@EnableMethodSecurity`, `@PreAuthorize SpEL Expression`, `401 vs 403 HTTP Status Semantics`, `Resource Ownership Verification`.
 
 ---
 
-### 📌 Task 38: Tùy biến lỗi 401 và 403 theo chuẩn `ApiResponse`
+### 📌 Task 41: Tùy biến lỗi 401 và 403 theo chuẩn `ApiResponse`
 * **Mục tiêu:** Viết `CustomAuthenticationEntryPoint` và `CustomAccessDeniedHandler`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Tại sao khi bị lỗi 401 hoặc 403, `GlobalExceptionHandler` (`@RestControllerAdvice`) lại **hoàn toàn bất lực không thể bắt được lỗi này**? (Gợi ý: Lỗi xảy ra ở tầng Security Filter Chain TRƯỚC KHI request chạm tới `DispatcherServlet` và Controller).
@@ -477,10 +516,10 @@
 
 ---
 
-## ⚡ GIAI ĐOẠN 7: Bất Đồng Bộ, Upload File & Caching (Tasks 39 - 44)
+## ⚡ GIAI ĐOẠN 7: Bất Đồng Bộ, Upload File & Caching (Tasks 42 - 47)
 
-### 📌 Task 39: Xây Dựng Service Upload File Ảnh Sản Phẩm (Local Storage)
-* **Mục tiêu:** Viết API `POST /api/products/{id}/image` nhận `MultipartFile` và lưu vào thư mục `uploads/`.
+### 📌 Task 42: Xây Dựng Service Upload File Ảnh Sản Phẩm (Local Storage)
+* **Mục tiêu:** Viết API `POST /api/v1/products/{id}/image` nhận `MultipartFile` và lưu vào thư mục `uploads/`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi Client gửi request `multipart/form-data`, file được truyền tải dưới dạng các luồng byte (Byte Stream) như thế nào qua mạng?
   2. ⚠️ *[Bẫy lỗi trùng tên]:* Nếu 2 người cùng upload file tên `anh-san-pham.jpg`, làm sao để file sau không ghi đè và làm mất file trước? (Giải pháp: Tự sinh tên file duy nhất bằng `UUID.randomUUID().toString() + extension`).
@@ -491,7 +530,7 @@
 
 ---
 
-### 📌 Task 40: Kiểm Tra Bảo Mật File Upload (Security Validation)
+### 📌 Task 43: Kiểm Tra Bảo Mật File Upload (Security Validation)
 * **Mục tiêu:** Chặn upload file độc hại (.exe, .php, .sh), giới hạn dung lượng 5MB.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Lỗ hổng thực tế]:* Nếu Hacker đổi tên file virus `shell.php` hoặc `trojan.exe` thành `avatar.jpg` rồi upload lên server, việc chỉ kiểm tra đuôi mở rộng file bằng `filename.endsWith(".jpg")` có bị qua mặt hoàn toàn không?
@@ -503,7 +542,7 @@
 
 ---
 
-### 📌 Task 41: Bật Tính Năng Chạy Ngầm Bất Đồng Bộ (`@EnableAsync`)
+### 📌 Task 44: Bật Tính Năng Chạy Ngầm Bất Đồng Bộ (`@EnableAsync`)
 * **Mục tiêu:** Bật `@EnableAsync` và viết service gửi email thông báo chạy ngầm.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Khi một method được đánh dấu `@Async`, Spring AOP tạo ra một Proxy và đẩy việc thực thi method đó sang một Thread Worker riêng biệt từ `TaskExecutor` như thế nào?
@@ -515,7 +554,7 @@
 
 ---
 
-### 📌 Task 42: Tách Rời Logic Bằng Spring Event (`ApplicationEventPublisher`)
+### 📌 Task 45: Tách Rời Logic Bằng Spring Event (`ApplicationEventPublisher`)
 * **Mục tiêu:** Khi tạo đơn thành công, bắn `OrderCreatedEvent` để module thông báo tự động lắng nghe.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất Kiến trúc]:* Mô hình **Event-Driven Architecture (EDA) nội bộ** giúp giảm độ phụ thuộc (Decoupling) giữa `OrderService` và `EmailService` như thế nào? (OrderService không cần `@Autowired EmailService`).
@@ -527,7 +566,7 @@
 
 ---
 
-### 📌 Task 43: Tích Hợp Redis & Bật Caching Cho Ứng Dụng
+### 📌 Task 46: Tích Hợp Redis & Bật Caching Cho Ứng Dụng
 * **Mục tiêu:** Cài đặt Redis (qua Docker), tích hợp `spring-boot-starter-data-redis` và bật `@EnableCaching`.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Tốc độ truy xuất dữ liệu trên bộ nhớ RAM (In-memory Data Store như Redis) nhanh hơn truy xuất đĩa cứng (PostgreSQL) từ 100 đến 1.000 lần như thế nào?
@@ -539,7 +578,7 @@
 
 ---
 
-### 📌 Task 44: Áp Dụng `@Cacheable` và `@CacheEvict` Cho Danh Mục
+### 📌 Task 47: Áp Dụng `@Cacheable` và `@CacheEvict` Cho Danh Mục
 * **Mục tiêu:** Cache danh sách danh mục và xóa cache tự động khi có thay đổi.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Mô hình **Cache-Aside Pattern (Lazy Loading Cache)** hoạt động theo 3 bước nào: (1) Đọc Cache $\rightarrow$ (2) Nếu Cache Miss thì đọc DB $\rightarrow$ (3) Ghi ngược lại Cache?
@@ -551,9 +590,9 @@
 
 ---
 
-## 🧪 GIAI ĐOẠN 8: Kiểm Thử Tự Động, Logging & Đóng Gói Production (Tasks 45 - 50)
+## 🧪 GIAI ĐOẠN 8: Kiểm Thử Toàn Diện, Giám Sát, Docker & CI/CD (Tasks 48 - 52)
 
-### 📌 Task 45: Viết Unit Test Đầu Tiên Với JUnit 5 Cho `CategoryMapper`
+### 📌 Task 48: Viết Unit Test Đầu Tiên Với JUnit 5 Cho `CategoryMapper`
 * **Mục tiêu:** Viết `CategoryMapperTest` kiểm tra chuyển đổi Entity $\leftrightarrow$ DTO.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Kim tự tháp kiểm thử (Testing Pyramid) gồm 3 tầng: Unit Test (Đáy lớn nhất), Integration Test (Tầng giữa), E2E Test (Đỉnh). Tại sao Unit Test cần phải chiếm số lượng nhiều nhất và có tốc độ chạy nhanh nhất (vài mili-giây)?
@@ -565,7 +604,7 @@
 
 ---
 
-### 📌 Task 46: Viết Unit Test Cho `CategoryServiceImpl` Với Mockito
+### 📌 Task 49: Viết Unit Test Cho `CategoryServiceImpl` Với Mockito
 * **Mục tiêu:** Dùng `@Mock` và `@InjectMocks` để test logic Service độc lập hoàn toàn với Database.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Mocking là gì? Tại sao khi viết Unit Test cho tầng Service, ta bắt buộc phải "giả lập" (Mock) tầng Repository mà không được kết nối đến Database thật? (Đảm bảo tính Độc lập - Isolation và Tốc độ thực thi).
@@ -577,31 +616,19 @@
 
 ---
 
-### 📌 Task 47: Viết Integration Test Cho Controller Với `MockMvc`
-* **Mục tiêu:** Viết `CategoryControllerTest` kiểm tra toàn bộ luồng từ HTTP Request đến Response.
+### 📌 Task 50: Viết Integration Test & Tìm Hiểu Contract Testing *(MỚI BỔ SUNG)*
+* **Mục tiêu:** Viết `CategoryControllerTest` với `MockMvc` và tìm hiểu khái niệm Consumer-Driven Contract Testing.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
-  1. 🔬 *[Bản chất]:* `MockMvc` giả lập môi trường Servlet Container (Tomcat) như thế nào mà không cần phải thực sự mở một cổng mạng (Port 8080) thật trên máy tính?
-  2. 🔬 *[Phạm vi Test]:* So sánh `@WebMvcTest(CategoryController.class)` (Slice Test - Chỉ khởi động tầng Controller + Filter, Mock tầng Service) vs `@SpringBootTest + @AutoConfigureMockMvc` (Full Integration Test - Khởi động toàn bộ ứng dụng).
-  3. ⚠️ *[Kiểm tra JSON]:* Làm sao dùng cú pháp `jsonPath("$.code").value(1000)` và `jsonPath("$.result.name").value("Laptop")` để đối soát từng trường trong dữ liệu JSON trả về?
-  4. ⚠️ *[Test Validation]:* Viết test case gửi body JSON rỗng `{ "name": "" }`: Chứng minh rằng Controller tự động chặn lại và trả về HTTP Status `400 Bad Request` mà không cần gọi xuống Service.
-  5. 🏢 *[Thực tế]:* Viết Integration Test kiểm tra: Gọi `GET /api/categories/1` $\rightarrow$ Trả về `200 OK` kèm đúng định dạng `ApiResponse`.
-* **Từ khóa:** `MockMvc Framework`, `@WebMvcTest vs @SpringBootTest`, `JsonPath Assertions`, `HTTP Status Code Integration Testing`.
+  1. 🔬 *[Bản chất MockMvc]:* `MockMvc` giả lập môi trường Servlet Container (Tomcat) như thế nào mà không cần phải thực sự mở một cổng mạng (Port 8080) thật trên máy tính?
+  2. 🔬 *[Phạm vi Test]:* So sánh `@WebMvcTest(CategoryController.class)` (Slice Test - Chỉ khởi động tầng Controller + Filter) vs `@SpringBootTest + @AutoConfigureMockMvc` (Full Integration Test).
+  3. ⚠️ *[Kiểm tra JSON]:* Làm sao dùng cú pháp `jsonPath("$.code").value(1000)` và `jsonPath("$.result.name").value("Laptop")` để đối soát từng trường trong JSON trả về?
+  4. 🔬 *[Khái niệm Contract Testing]:* Khi hệ thống phân rã thành nhiều Microservices hoặc Frontend/Backend độc lập, tại sao Unit Test & Integration Test vẫn không phát hiện được lỗi khi Backend đổi kiểu dữ liệu một trường? **Consumer-Driven Contract Testing (Pact / Spring Cloud Contract)** bảo vệ hợp đồng API giữa 2 bên ra sao?
+  5. 🏢 *[Thực tế]:* Viết Integration Test kiểm tra: Gửi body rỗng `{ "name": "" }` $\rightarrow$ Nhận về `400 Bad Request` chuẩn JSON ApiResponse.
+* **Từ khóa:** `MockMvc Framework`, `@WebMvcTest vs @SpringBootTest`, `JsonPath Assertions`, `Consumer-Driven Contract Testing (Pact Concept)`.
 
 ---
 
-### 📌 Task 48: Ghi Log Chuẩn (SLF4J) & Truy Vết Lỗi Bằng Trace ID (MDC)
-* **Mục tiêu:** Tạo `CorrelationIdFilter` tự động gắn `traceId` vào mọi dòng log của cùng một request.
-* **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
-  1. 🔬 *[Bản chất SLF4J]:* SLF4J là một Logging Facade (Giao diện trừu tượng) còn Logback là Logging Implementation (Triển khai cụ thể). Lợi ích của việc code thông qua SLF4J (`log.info(...)`) thay vì dính chặt vào một thư viện log cụ thể là gì?
-  2. ⚠️ *[Vấn đề Thực tế]:* Khi có 5.000 người dùng cùng bấm đặt hàng trong 1 giây, các dòng log in ra file log xen lẫn nhau như một mớ bòng bong. Làm sao bạn biết dòng log "Trừ kho thất bại" là của đơn hàng nào, do user nào gọi?
-  3. 🔬 *[Giải pháp MDC]:* Cơ chế **MDC (Mapped Diagnostic Context)** của SLF4J lưu trữ dữ liệu theo từng luồng (`ThreadLocal`) như thế nào để mọi lệnh `log.info()` trong suốt vòng đời của request đó đều tự động in kèm mã `[TraceID: 3a7b-8c9d]` ở đầu dòng?
-  4. ⚖️ *[Cấu hình Logback Pattern]:* Cấu hình chuỗi Pattern trong file `logback-spring.xml`: `%d{yyyy-MM-dd HH:mm:ss} [%X{traceId}] %-5level %logger{36} - %msg%n`.
-  5. 🏢 *[Thực tế]:* Tạo `CorrelationIdFilter`: Lấy header `X-Correlation-ID` từ Client (nếu có), nếu không có thì tự sinh `UUID.randomUUID().toString()`, nạp vào `MDC.put("traceId", traceId)`, và nhớ gọi `MDC.clear()` ở khối `finally` để tránh rò rỉ bộ nhớ ThreadLocal.
-* **Từ khóa:** `SLF4J Logging Facade vs Logback`, `MDC (Mapped Diagnostic Context)`, `Correlation ID Distributed Tracing Pattern`, `ThreadLocal Memory Leak Prevention with MDC.clear()`.
-
----
-
-### 📌 Task 49: Tích Hợp Health Check & Metrics Với Spring Boot Actuator
+### 📌 Task 51: Tích Hợp Health Check & Metrics Với Spring Boot Actuator
 * **Mục tiêu:** Thêm `spring-boot-starter-actuator` và cấu hình endpoint giám sát sức khỏe hệ thống.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
   1. 🔬 *[Bản chất]:* Endpoint `/actuator/health` kiểm tra trạng thái của ứng dụng như thế nào? Nó kiểm tra những thành phần nào bên dưới (Database Connection Pool, Redis, Ổ đĩa Disk Space)?
@@ -613,25 +640,23 @@
 
 ---
 
-### 📌 Task 50: Đóng Gói Ứng Dụng Với Docker & Docker Compose
-* **Mục tiêu:** Viết `Dockerfile` Multi-stage và file `docker-compose.yml` chạy toàn bộ hệ thống bằng 1 lệnh duy nhất.
+### 📌 Task 52: Đóng Gói Docker & Tự Động Hóa CI/CD Với GitHub Actions *(MỚI BỔ SUNG)*
+* **Mục tiêu:** Viết `Dockerfile` Multi-stage, `docker-compose.yml`, và file `.github/workflows/ci.yml` tự động build/test khi push code.
 * **Bộ 5 Câu hỏi Tư duy Kỹ sư:**
-  1. 🔬 *[Bản chất Multi-stage Build]:* Trong `Dockerfile`, tại sao nên chia làm 2 giai đoạn: Stage 1 (Dùng Image `maven:3.9-eclipse-temurin-21` để build ra file `.jar`) và Stage 2 (Dùng Image `eclipse-temurin:21-jre-alpine` siêu nhẹ chỉ để chạy file `.jar`)? Kỹ thuật này giúp giảm dung lượng Docker Image từ 800MB xuống 150MB như thế nào?
-  2. ⚠️ *[Bảo mật Container]:* Tại sao không nên chạy ứng dụng trong Container dưới quyền `USER root` mà nên tạo một User không có đặc quyền (`RUN adduser -D springuser && USER springuser`)?
-  3. 🔬 *[Mạng trong Docker Compose]:* Trong file `docker-compose.yml`, khi Spring Boot kết nối với PostgreSQL, tại sao URL kết nối lại là `jdbc:postgresql://postgres-db:5432/postgres` (dùng tên Service của Docker) thay vì `localhost:5432`? (Cơ chế Docker DNS & Internal Bridge Network).
-  4. ⚖️ *[Quản lý Phụ thuộc khởi động]:* Sử dụng `depends_on` kèm `condition: service_healthy` trong docker-compose để đảm bảo: PostgreSQL và Redis phải khởi động xong và sẵn sàng nhận kết nối thì Spring Boot App mới được phép khởi động.
-  5. 🏢 *[Thực hành Tối thượng]:* Mở terminal gõ đúng 1 câu lệnh duy nhất:
-     ```bash
-     docker compose up -d --build
-     ```
-     Mở trình duyệt truy cập `http://localhost:8080/swagger-ui.html` $\rightarrow$ Toàn bộ hệ thống Backend, Database, Redis đã hoạt động hoàn hảo và sẵn sàng phục vụ!
-* **Từ khóa:** `Multi-stage Dockerfile Best Practices`, `Non-root User Security in Docker`, `Docker Compose Networking & Healthcheck`, `Zero-configuration Deployment`.
+  1. 🔬 *[Bản chất Multi-stage Build]:* Trong `Dockerfile`, tại sao nên chia làm 2 giai đoạn: Stage 1 (Dùng Image `maven:3.9-eclipse-temurin-21` để build file `.jar`) và Stage 2 (Dùng Image `eclipse-temurin:21-jre-alpine` siêu nhẹ chỉ để chạy file `.jar`)? Kỹ thuật này giúp giảm dung lượng Image từ 800MB xuống 150MB như thế nào?
+  2. 🔬 *[Mạng trong Docker Compose]:* Trong file `docker-compose.yml`, khi Spring Boot kết nối với PostgreSQL, tại sao URL kết nối lại là `jdbc:postgresql://postgres-db:5432/postgres` (dùng tên Service của Docker) thay vì `localhost:5432`? (Cơ chế Docker DNS & Internal Bridge Network).
+  3. 🔬 *[Cơ chế CI/CD Pipeline]:* Khái niệm **Continuous Integration (Tích hợp liên tục - CI)** là gì? Khi lập trình viên push code lên GitHub, GitHub Actions tự động khởi chạy Runner ảo để chạy lệnh `mvn clean test` như thế nào?
+  4. ⚠️ *[Chặn Merge Code Lỗi]:* Nếu có 1 Unit Test bị fail, GitHub Actions sẽ đánh dấu đỏ (Build Failed) và chặn không cho Merge code vào nhánh `main`. Điều này bảo vệ sản phẩm như thế nào?
+  5. 🏢 *[Thực hành Tối thượng]:* Tạo file `.github/workflows/ci.yml` đơn giản chạy `mvn clean verify` mỗi khi có Pull Request.
+* **Từ khóa:** `Multi-stage Dockerfile Best Practices`, `docker-compose.yml Networking`, `GitHub Actions CI Pipeline (.github/workflows/ci.yml)`, `Automated Quality Gates`.
 
 ---
 
-## 🏆 BẠN ĐÃ SẴN SÀNG TRỞ THÀNH KỸ SƯ BACKEND XUẤT SẮC!
+## 🏆 BẠN ĐÃ SỞ HỮU MỘT LỘ TRÌNH ĐẲNG CẤP SENIOR!
 
-Mỗi khi bắt đầu một Task:
-1. Đọc kỹ **Bộ 5 Câu hỏi Tư duy Kỹ sư**.
-2. Dành 5-10 phút suy ngẫm và tự trả lời theo cách hiểu của bạn.
-3. Chia sẻ câu trả lời với tôi $\rightarrow$ Tôi sẽ phân tích, phản biện và hướng dẫn bạn bước tiếp theo!
+Lộ trình này không chỉ dạy bạn gõ code Spring Boot, mà rèn luyện cho bạn **tư duy toàn diện của một Kỹ sư Phần mềm thực thụ (Software Engineer)**:
+- Nắm chắc kiến trúc dữ liệu và tối ưu hiệu năng DB.
+- Hiểu sâu bảo mật, giao dịch đa luồng, và cache.
+- Tự động hóa kiểm thử, giám sát và triển khai CI/CD.
+
+👉 **Hãy bắt đầu ngay với [Task 1: Tạo class trừu tượng BaseEntity](file:///Users/kyanh/Documents/Learn/learn_spring/LEARNING_ROADMAP.md#task-1-t%E1%BA%A1o-class-tr%E1%BB%ABu-t%C6%B0%E1%BB%A3ng-baseentity)!**

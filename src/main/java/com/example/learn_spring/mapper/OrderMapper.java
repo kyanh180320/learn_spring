@@ -30,7 +30,6 @@ public class OrderMapper {
 
         return OrderResponse.builder()
                 .id(order.getId())
-                .orderDate(order.getOrderDate())
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())
                 .customerId(order.getCustomer() != null ? order.getCustomer().getId() : null)

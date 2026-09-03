@@ -1,5 +1,6 @@
 package com.example.learn_spring.entity;
 
+import com.example.learn_spring.entity.Base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,15 +14,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private LocalDateTime orderDate = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

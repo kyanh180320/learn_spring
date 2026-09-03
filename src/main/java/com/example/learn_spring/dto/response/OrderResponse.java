@@ -16,7 +16,6 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderResponse {
     private Long id;
-    private LocalDateTime orderDate;
     private OrderStatus status;
     private BigDecimal totalAmount;
     private Long customerId;

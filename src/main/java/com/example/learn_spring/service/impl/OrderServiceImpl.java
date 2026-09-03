@@ -78,7 +78,6 @@ public class OrderServiceImpl implements OrderService {
         // Tạo và lưu đơn hàng ban đầu
         Order order = Order.builder()
                 .customer(customer)
-                .orderDate(LocalDateTime.now())
                 .status(OrderStatus.PENDING)
                 .totalAmount(BigDecimal.ZERO)
                 .build();

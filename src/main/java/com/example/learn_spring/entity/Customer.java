@@ -28,4 +28,5 @@ public class Customer extends BaseEntity {
 
     @Column(length = 255)
     private String address;
+
 }

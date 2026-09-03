@@ -1,6 +1,8 @@
 package com.example.learn_spring.exception;
 
 import com.example.learn_spring.dto.api.ApiResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,5 +53,28 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(ErrorCode.UNCATEGORIZED_EXCEPTION.getHttpStatus()).body(apiResponse);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>>  handleConstraintViolation(ConstraintViolationException ex){
+        Map<String, String> errors = new HashMap<>();
+        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            String fieldName = extractField(violation.getPropertyPath().toString());
+            errors.put(fieldName, violation.getMessage());
+        }
+
+        ApiResponse<Map<String, String>> apiResponse = ApiResponse.<Map<String, String>>builder()
+                .code(ErrorCode.INVALID_INPUT.getCode())
+                .message(ErrorCode.INVALID_INPUT.getMessage())
+                .result(errors)
+                .build();
+
+        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getHttpStatus()).body(apiResponse);
+
+    }
+
+    private String extractField(String propertyPath){
+        int lastDot = propertyPath.lastIndexOf('.');
+        return lastDot >= 0 ? propertyPath.substring(lastDot+1) : propertyPath;
     }
 }

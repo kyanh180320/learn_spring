@@ -1,17 +1,17 @@
-# 🚀 Lộ Trình 29 Bài Tập TypeScript & ES6+ Cốt Lõi (Thực Chiến React & Express)
+# 🚀 Lộ Trình 30 Bài Tập TypeScript & ES6+ Cốt Lõi (Thực Chiến React & Express)
 
 > **Mục tiêu:** Tối ưu hóa 100% thời gian học, **cắt bỏ toàn bộ Type Gymnastics hàn lâm**, chỉ tập trung vào những kỹ thuật bạn sẽ viết và đọc **hằng ngày** trong các dự án **React (Next.js)** và **Backend Express / NestJS**.
 
 ---
 
-## 🧭 Cấu Trúc 4 Chặng Luyện Tập (29 Bài Cốt Lõi)
+## 🧭 Cấu Trúc 4 Chặng Luyện Tập (30 Bài Cốt Lõi Thực Chiến)
 
 | Chặng | Cấp độ | Số bài | Ứng dụng thực tế trong React & Express |
 | :--- | :--- | :---: | :--- |
-| **Chặng 1** | 🟢 Nền tảng Types & Cú pháp | Bài 01 - 10 | Props, State cơ bản, Union literal, Interface DTO, xử lý `null`/`undefined` |
+| **Chặng 1** | 🟢 Nền tảng Types & Cú pháp | Bài 01 - 10 | Props, State cơ bản, Union literal, Interface DTO, xử lý `null`/`undefined` (`??`, `?.`) |
 | **Chặng 2** | 🟡 Thu hẹp kiểu & Generics | Bài 11 - 16 | React Async State (`idle`/`loading`), Custom Type Guard validate `req.body`, Generic Fetcher & Repo |
-| **Chặng 3** | 🟠 Utility Types & Form State | Bài 17 - 22 | DTO (Pick/Omit), Form State typing, `Prettify`, trích xuất kiểu Hook/API với `infer` |
-| **Chặng 4** | 🔴 Advanced & ES6+ Runtime | Bài 23 - 29 | Safe `try/catch` unknown error, Typed Event Emitter, In-Memory `Map`, Batch Promises, Template Literals |
+| **Chặng 3** | 🟠 Utility Types & Form State | Bài 17 - 20 | DTO (`Partial`/`Pick`/`Omit`), Form State typing, Unwrap Hook & Promise với `ReturnType`/`Awaited` |
+| **Chặng 4** | 🔴 ES6+ Runtime & Async Thực Chiến | Bài 21 - 30 | Safe `try/catch`, Destructuring, Spread/Rest Immutability, Dynamic Keys, Map/Set, Object.entries |
 
 ---
 
@@ -316,61 +316,42 @@ type LoginTouched = FormTouched<LoginForm>;   // { email?: boolean; password?: b
 
 ---
 
-### Bài 20: Utility Kinh Điển: `Prettify<T>` (Debug Type trong VSCode)
-- **Ứng dụng thực tế:** Khi gộp nhiều Type Intersection (`Props & HTMLAttributes`), VSCode hover rất rối. `Prettify` giúp hiển thị một Object phẳng sạch sẽ.
-- **Yêu cầu:** Viết `type Prettify<T> = { [K in keyof T]: T[K] } & {}`.
-- **Keywords:** `typescript prettify helper`, `flatten intersection type vscode`
-- **Input / Output Mẫu (Type Check):**
-```typescript
-type DirtyType = { id: string } & { title: string } & { isCompleted: boolean };
-
-type CleanType = Prettify<DirtyType>;
-// Khi hover vào CleanType trong VSCode: { id: string; title: string; isCompleted: boolean }
-```
-
----
-
-### Bài 21: Từ khóa `infer`: Tự viết lại `MyReturnType<T>`
-- **Ứng dụng thực tế:** Lấy kiểu dữ liệu trả về của một Custom Hook hoặc hàm utility mà thư viện không export sẵn type.
-- **💡 Gợi ý tư duy (Hint):**
-  - Cú pháp: `type MyReturnType<T> = T extends (...args: any[]) => infer R ? R : never`.
-- **Keywords:** `typescript infer keyword`, `extract hook return type`
+### Bài 20: Built-in Utility Types: `ReturnType<T>` & `Awaited<T>` (Unwrap Hook & Async API)
+- **Ứng dụng thực tế:** 
+  1. Trích xuất kiểu State trả về từ một Custom Hook trong React mà thư viện ngoài không export sẵn Type (`ReturnType<typeof useAuth>`).
+  2. Trích xuất kiểu dữ liệu thực tế bên trong Promise của một hàm Async API trong Backend (`Awaited<ReturnType<typeof fetchUser>>`).
+- **Yêu cầu:** Không cần dùng `infer` phức tạp, hãy sử dụng 2 utility chính chủ có sẵn của TypeScript:
+  1. Dùng `ReturnType<typeof useAuth>` để lấy kiểu `AuthState`.
+  2. Dùng `Awaited<ReturnType<typeof fetchUserData>>` để lấy kiểu `UserDetail`.
+- **Keywords:** `typescript returntype`, `typescript awaited utility`, `extract type from async function`
 - **Input / Output Mẫu (Type Check):**
 ```typescript
 function useAuth() {
-  return { user: { id: "1", name: "Alice" }, token: "jwt_token_123" };
+  return { user: { id: "1", name: "Alice" }, token: "jwt_123" };
 }
 
-type AuthState = MyReturnType<typeof useAuth>;
+async function fetchUserData(id: number) {
+  return { id, name: "Alice", email: "alice@test.com", role: "admin" as const };
+}
+
+// 1. Trích xuất kiểu trả về của Hook
+type AuthState = ReturnType<typeof useAuth>;
 // { user: { id: string; name: string }; token: string }
+
+// 2. Unwrap Promise của hàm async (chính chủ từ TS 4.5+)
+type UserDetail = Awaited<ReturnType<typeof fetchUserData>>;
+// { id: number; name: string; email: string; role: "admin" }
 ```
 
 ---
 
-### Bài 22: `PromiseValue<T>` (Unwrap Async API Response)
-- **Ứng dụng thực tế:** Trích xuất kiểu dữ liệu thực tế bên trong `Promise<T>` khi gọi hàm async.
-- **Yêu cầu:** Viết `type PromiseValue<T> = T extends Promise<infer V> ? V : T`.
-- **Keywords:** `typescript unwrap promise infer`, `async return type`
-- **Input / Output Mẫu (Type Check):**
-```typescript
-async function fetchUserById(id: number) {
-  return { id, name: "Alice", role: "admin" };
-}
-
-type UserResponse = PromiseValue<ReturnType<typeof fetchUserById>>;
-// { id: number; name: string; role: string }
-```
+## 🔴 CHẶNG 4: ES6+ RUNTIME, IMMUTABILITY & ASYNC THỰC CHIẾN
+*Mục tiêu: Làm chủ các tính năng runtime ES6+ quan trọng nhất kết hợp cùng Type Safety để xây dựng ứng dụng React & Express.*
 
 ---
 
-## 🔴 CHẶNG 4: ADVANCED PATTERNS & ES6+ CHO REACT & EXPRESS
-*Mục tiêu: Kết hợp Type Safety với các tính năng runtime ES6+ quan trọng nhất trong phát triển ứng dụng.*
-
----
-
-### Bài 23: Safe `try/catch` & Unknown Error Handling
-> *Đã bổ sung: Giải quyết khoảng trống lớn nhất khi xử lý lỗi trong Express & React.*
-- **Ứng dụng thực tế:** Trong TypeScript (chế độ strict), biến lỗi trong `catch (err: unknown)` luôn có kiểu `unknown`. Viết hàm tiện ích trích xuất message lỗi an toàn.
+### Bài 21: Safe `try/catch` & Unknown Error Handling
+- **Ứng dụng thực tế:** Trong TypeScript (chế độ strict), biến lỗi trong `catch (err: unknown)` luôn có kiểu `unknown`. Viết hàm tiện ích trích xuất message lỗi an toàn cho React và Express.
 - **Yêu cầu:**
   1. Viết hàm `getErrorMessage(error: unknown): string`. Nếu `error instanceof Error` trả về `error.message`, nếu là string trả về chính nó, ngược lại trả về `"Unknown error"`.
   2. Viết hàm wrapper `safeAsync<T>(fn: () => Promise<T>): Promise<{ data: T; error: null } | { data: null; error: string }>`.
@@ -378,7 +359,7 @@ type UserResponse = PromiseValue<ReturnType<typeof fetchUserById>>;
 - **Input / Output Mẫu:**
 ```typescript
 // Sử dụng trong Express Controller / React Handler:
-const result = await safeAsync(() => fetchUserData("123"));
+const result = await safeAsync(() => fetchUserData(123));
 
 if (result.error) {
   console.log("Lỗi:", result.error); // error là string an toàn
@@ -389,74 +370,7 @@ if (result.error) {
 
 ---
 
-### Bài 24: Template Literal Types (Action Types & Event Names)
-- **Ứng dụng thực tế:** Tự động sinh tên action Redux (ví dụ: `"SET_USER" | "RESET_USER"`) hoặc CSS Class.
-- **Yêu cầu:** Cho `type Action = "SET" | "RESET"` và `type Entity = "USER" | "PRODUCT"`. Tạo type `ActionType = `${Action}_${Entity}``.
-- **Keywords:** `typescript template literal types`, `redux action type generation`
-- **Input / Output Mẫu (Type Check):**
-```typescript
-type AppAction = ActionType;
-// Expected: "SET_USER" | "SET_PRODUCT" | "RESET_USER" | "RESET_PRODUCT"
-```
-
----
-
-### Bài 25: `KeysOfType<T, ValueType>` & `PickByType<T, ValueType>`
-- **Ứng dụng thực tế:** Lọc các trường trong form schema chỉ lấy trường dạng chuỗi hoặc số để render đúng component Input.
-- **Yêu cầu:**
-  1. Viết `type KeysOfType<T, ValueType> = { [K in keyof T]: T[K] extends ValueType ? K : never }[keyof T]`.
-  2. Viết `type PickByType<T, ValueType> = Pick<T, KeysOfType<T, ValueType>>`.
-- **Keywords:** `typescript key remapping as`, `pick properties by type`
-- **Input / Output Mẫu (Type Check):**
-```typescript
-interface ProductForm { id: number; title: string; price: number; inStock: boolean }
-
-type TextFields = KeysOfType<ProductForm, string>; // "title"
-type NumericProps = PickByType<ProductForm, number>; // { id: number; price: number }
-```
-
----
-
-### Bài 26: Type-Safe Event Emitter (Socket.io & Event Bus)
-- **Ứng dụng thực tế:** Xây dựng Event Bus cho Socket.io hoặc component communication đảm bảo gửi đúng event và payload.
-- **Yêu cầu:** Tạo class `TypedEventEmitter<EventMap>` có method `on` và `emit`.
-- **Keywords:** `typescript type-safe event emitter`, `socket.io generic typing`
-- **Input / Output Mẫu:**
-```typescript
-interface SocketEvents {
-  "chat:message": { room: string; message: string };
-  "user:online": { userId: string };
-}
-
-const socket = new TypedEventEmitter<SocketEvents>();
-
-socket.emit("chat:message", { room: "general", message: "Hello!" });
-
-// @ts-expect-error - Sai tên event hoặc payload
-socket.emit("chat:message", { room: 123 });
-```
-
----
-
-### Bài 27: ES6 `Map<K, V>` In-Memory Storage (Express Session / Cache)
-> *Đã tinh chỉnh: Đơn giản hóa, tập trung vào việc áp dụng Map có kiểu Generic.*
-- **Ứng dụng thực tế:** Quản lý User Sessions hoặc in-memory Key-Value store trong Backend Express.
-- **Yêu cầu:** Tạo class `SessionStore<T>` bọc `Map<string, T>` với các method type-safe: `setSession(token: string, data: T): void`, `getSession(token: string): T | undefined`, `removeSession(token: string): boolean`.
-- **Keywords:** `es6 map generic typescript`, `in memory session store`
-- **Input / Output Mẫu:**
-```typescript
-interface UserSession { userId: number; role: "admin" | "user" }
-
-const sessions = new SessionStore<UserSession>();
-sessions.setSession("token_123", { userId: 1, role: "admin" });
-
-const user = sessions.getSession("token_123");
-console.log(user?.role); // "admin" (Type: "admin" | "user" | undefined)
-```
-
----
-
-### Bài 28: `Promise.all` & `Promise.allSettled` (Batch Requests Concurrency)
+### Bài 22: `Promise.all` & `Promise.allSettled` (Batch Requests Concurrency)
 - **Ứng dụng thực tế:** Gọi đồng thời nhiều API ở React hoặc gom nhiều query độc lập ở Backend Express mà không sợ 1 task lỗi làm sập toàn bộ luồng.
 - **Yêu cầu:** Viết hàm `fetchBatchSummaries<T>(promises: Promise<T>[]): Promise<{ successes: T[]; errors: string[] }>`. Dùng `Promise.allSettled`.
 - **Keywords:** `promise.allsettled typescript`, `batch async requests handling`
@@ -473,7 +387,24 @@ const { successes, errors } = await fetchBatchSummaries([p1, p2, p3]);
 
 ---
 
-### Bài 29: Type-Safe `Array.prototype.reduce` (Data Aggregation DTO)
+### Bài 23: ES6 `Map<K, V>` In-Memory Storage (Express Session / Cache)
+- **Ứng dụng thực tế:** Quản lý User Sessions hoặc in-memory Key-Value store trong Backend Express.
+- **Yêu cầu:** Tạo class `SessionStore<T>` bọc `Map<string, T>` với các method type-safe: `setSession(token: string, data: T): void`, `getSession(token: string): T | undefined`, `removeSession(token: string): boolean`.
+- **Keywords:** `es6 map generic typescript`, `in memory session store`
+- **Input / Output Mẫu:**
+```typescript
+interface UserSession { userId: number; role: "admin" | "user" }
+
+const sessions = new SessionStore<UserSession>();
+sessions.setSession("token_123", { userId: 1, role: "admin" });
+
+const user = sessions.getSession("token_123");
+console.log(user?.role); // "admin" (Type: "admin" | "user" | undefined)
+```
+
+---
+
+### Bài 24: Type-Safe `Array.prototype.reduce` (Data Aggregation DTO)
 - **Ứng dụng thực tế:** Gom nhóm dữ liệu trả về từ Database (ví dụ nhóm danh sách đơn hàng theo danh mục hoặc trạng thái).
 - **Yêu cầu:** Viết hàm `groupBy<T, K extends PropertyKey>(arr: T[], getKey: (item: T) => K): Record<K, T[]>`.
 - **Keywords:** `array reduce typescript typing`, `generic groupby backend data`
@@ -494,7 +425,204 @@ const grouped = groupBy(orders, (o) => o.status);
 
 ---
 
+### Bài 25: Object & Nested Destructuring với Aliasing & Default Values
+- **Ứng dụng thực tế:** Bóc tách props trong React Component và parse `req.query` / `req.body` trong Express. Tránh nhầm lẫn kinh điển giữa cú pháp gán kiểu và đổi tên biến (alias).
+- **Yêu cầu:** 
+  1. Cho interface:
+     ```typescript
+     interface UserCardProps {
+       id: string;
+       fullName: string;
+       role?: "ADMIN" | "MEMBER";
+       address: { city: string; country: string };
+     }
+     ```
+  2. Viết hàm `formatUserCard(props: UserCardProps): string` thực hiện destructuring:
+     - Đổi tên `fullName` thành `displayName` bằng cú pháp alias (`fullName: displayName`).
+     - Gán giá trị mặc định cho `role` là `"MEMBER"` nếu không truyền.
+     - Bóc tách lồng nhau (nested destructuring) trường `city` từ `address`.
+     - Trả về chuỗi: `"[displayName] (role) - city"`.
+  3. Viết hàm `getFirstAndRest<T>(items: T[]): { first?: T; rest: T[] }` dùng Array Destructuring và Rest syntax.
+- **Keywords:** `typescript destructuring alias rename`, `destructuring default values`, `nested destructuring`
+- **Input / Output Mẫu:**
+```typescript
+const user1: UserCardProps = {
+  id: "u1",
+  fullName: "Kỳ Anh",
+  address: { city: "Đà Nẵng", country: "VN" }
+};
+
+formatUserCard(user1); 
+// "[Kỳ Anh] (MEMBER) - Đà Nẵng"
+
+const user2: UserCardProps = {
+  id: "u2",
+  fullName: "Alex",
+  role: "ADMIN",
+  address: { city: "Hà Nội", country: "VN" }
+};
+
+formatUserCard(user2); 
+// "[Alex] (ADMIN) - Hà Nội"
+
+getFirstAndRest([1, 2, 3, 4]); // { first: 1, rest: [2, 3, 4] }
+getFirstAndRest([]);           // { first: undefined, rest: [] }
+```
+
+---
+
+### Bài 26: Spread Operator & Immutable State Updates (React State & Redux)
+- **Ứng dụng thực tế:** Cập nhật Object lồng nhau và Mảng trong React State mà không mutate trực tiếp object ban đầu (nguyên tắc bất biến Immutability của React/Redux).
+- **Yêu cầu:** Cho kiểu:
+  ```typescript
+  interface CartItem { id: string; name: string; price: number; quantity: number }
+  interface ShoppingCartState { items: CartItem[]; coupon?: { code: string; discountPercent: number } }
+  ```
+  1. Viết hàm `addItem(state: ShoppingCartState, newItem: CartItem): ShoppingCartState`: Thêm một món hàng mới vào mảng `items` bằng Spread Operator (không dùng `push`).
+  2. Viết hàm `updateQuantity(state: ShoppingCartState, itemId: string, quantity: number): ShoppingCartState`: Cập nhật số lượng của sản phẩm có `id` tương ứng (trả về mảng mới dùng `.map()` và Spread, không mutate item cũ).
+  3. Viết hàm `applyCoupon(state: ShoppingCartState, code: string, discount: number): ShoppingCartState`: Cập nhật nested object `coupon` bằng Spread.
+- **Keywords:** `spread operator immutability react`, `immutable nested object update typescript`, `react state update array`
+- **Input / Output Mẫu:**
+```typescript
+const initialCart: ShoppingCartState = {
+  items: [{ id: "p1", name: "Chuột Gaming", price: 50, quantity: 1 }],
+};
+
+const cartWithItem = addItem(initialCart, { id: "p2", name: "Bàn phím cơ", price: 100, quantity: 1 });
+// cartWithItem.items.length === 2; initialCart.items.length === 1 (Không bị mutate!)
+
+const cartUpdatedQty = updateQuantity(cartWithItem, "p1", 3);
+// cartUpdatedQty.items[0].quantity === 3; cartWithItem.items[0].quantity === 1
+
+const cartWithCoupon = applyCoupon(cartUpdatedQty, "SALE20", 20);
+// cartWithCoupon.coupon === { code: "SALE20", discountPercent: 20 }
+```
+
+---
+
+### Bài 27: Rest Parameters & Forwarding Props (Wrapper Component Pattern)
+- **Ứng dụng thực tế:** Xây dựng Reusable UI Components (Button, Input) trong React hoặc Wrapper Functions trong Backend Express. Gom các thuộc tính còn lại (`...restProps`) để truyền tiếp vào thẻ HTML hoặc hàm gốc.
+- **Yêu cầu:**
+  1. Cho interface `BaseButtonProps { label: string; isLoading?: boolean; variant?: "solid" | "outline"; [key: string]: unknown }`.
+  2. Viết hàm `createButtonAttributes(props: BaseButtonProps): { buttonText: string; domAttributes: Record<string, unknown> }`.
+  3. Dùng Rest destructuring: Bóc tách `label`, `isLoading = false`, phần còn lại gộp vào `domAttributes`.
+  4. Nếu `isLoading === true`, gán thêm `domAttributes.disabled = true` và `buttonText = "Đang tải..."`, ngược lại `buttonText = label`.
+- **Keywords:** `rest parameters forwarding props`, `wrapper component react typescript`, `rest properties destructuring`
+- **Input / Output Mẫu:**
+```typescript
+const result = createButtonAttributes({
+  label: "Xác nhận thanh toán",
+  isLoading: false,
+  variant: "solid",
+  onClick: () => console.log("clicked"),
+  "data-testid": "submit-btn"
+});
+
+console.log(result.buttonText); // "Xác nhận thanh toán"
+console.log(result.domAttributes); 
+// { variant: "solid", onClick: [Function], "data-testid": "submit-btn" } (Không chứa label, isLoading)
+```
+
+---
+
+### Bài 28: Computed Property Names (`[key]: value` - Generic Dynamic Form)
+- **Ứng dụng thực tế:** Viết hàm xử lý sự kiện `onChange` tổng quát cho Form trong React thay vì phải viết riêng rẽ từng hàm `handleNameChange`, `handleEmailChange`, `handleAgeChange`.
+- **Yêu cầu:**
+  1. Viết hàm generic `updateFormField<T, K extends keyof T>(form: T, field: K, value: T[K]): T`.
+  2. Sử dụng cú pháp ES6 Computed Property Names `[field]: value` kết hợp Spread `{ ...form, [field]: value }`.
+  3. Đảm bảo TypeScript kiểm tra chặt chẽ: `value` truyền vào phải khớp 100% với kiểu dữ liệu của `field` tương ứng trong form.
+- **Keywords:** `es6 computed property names`, `typescript dynamic object key`, `generic form onchange handler`
+- **Input / Output Mẫu (Type Check):**
+```typescript
+interface UserRegistrationForm {
+  username: string;
+  email: string;
+  age: number;
+  isSubscribed: boolean;
+}
+
+const form: UserRegistrationForm = {
+  username: "kyanh",
+  email: "kyanh@test.com",
+  age: 24,
+  isSubscribed: false,
+};
+
+const updated1 = updateFormField(form, "age", 25);               // Type: UserRegistrationForm, age = 25
+const updated2 = updateFormField(form, "isSubscribed", true);    // Type: UserRegistrationForm, isSubscribed = true
+
+// @ts-expect-error - Sai kiểu: age yêu cầu number, không thể truyền string
+updateFormField(form, "age", "hai mươi lăm");
+
+// @ts-expect-error - Sai tên trường: "salary" không tồn tại trong form
+updateFormField(form, "salary", 5000);
+```
+
+---
+
+### Bài 29: ES6 `Set<T>` Deduplication & O(1) Membership Check (React Tags & RBAC)
+- **Ứng dụng thực tế:**
+  1. Lọc trùng lặp danh sách Tags/Danh mục từ API bằng `new Set()` và Spread `[...]`.
+  2. Xây dựng Module kiểm tra quyền hạn (Role-Based Access Control - RBAC) trong Express Middleware với tốc độ tìm kiếm O(1) thay vì dùng `Array.includes()` tốn O(N).
+- **Yêu cầu:**
+  1. Viết hàm `getUniqueTags(tags: string[]): string[]` sử dụng `new Set()` và cú pháp Spread.
+  2. Tạo class `PermissionGuard` nhận mảng các quyền hạn (`string[]`), lưu trong thuộc tính `private permissions: Set<string>`.
+  3. Cung cấp 3 method:
+     - `hasPermission(perm: string): boolean` (dùng `this.permissions.has(perm)` O(1)).
+     - `hasAnyPermission(perms: string[]): boolean` (kiểm tra có ít nhất 1 quyền, dùng `.some()`).
+     - `hasAllPermissions(perms: string[]): boolean` (kiểm tra có đủ tất cả quyền, dùng `.every()`).
+- **Keywords:** `es6 set deduplication array`, `typescript set type safe`, `rbac permission check o1 set`
+- **Input / Output Mẫu:**
+```typescript
+// 1. Deduplicate tags
+const rawTags = ["react", "typescript", "react", "nextjs", "typescript"];
+getUniqueTags(rawTags); // ["react", "typescript", "nextjs"]
+
+// 2. Permission Guard
+const guard = new PermissionGuard(["USER_READ", "USER_WRITE", "PRODUCT_READ"]);
+
+guard.hasPermission("USER_WRITE");                    // true (O(1))
+guard.hasPermission("PRODUCT_DELETE");               // false
+guard.hasAnyPermission(["ADMIN", "USER_READ"]);       // true
+guard.hasAllPermissions(["USER_READ", "ORDER_READ"]); // false
+```
+
+---
+
+### Bài 30: `Object.entries` & `Object.fromEntries` (DTO Sanitization & Query String)
+- **Ứng dụng thực tế:**
+  1. **Clean Payload:** Lọc bỏ các trường `undefined`, `null` hoặc chuỗi rỗng từ Form Object trước khi gửi POST/PUT lên Backend (tránh gửi data rác lên server).
+  2. **Query Parser:** Chuyển đổi và biến đổi dữ liệu URLSearchParams hoặc DTO sang cấu trúc dữ liệu mong muốn trong Express/Next.js.
+- **Yêu cầu:**
+  1. Viết hàm generic `removeNullishFields<T extends Record<string, any>>(obj: T): Partial<T>`.
+  2. Dùng `Object.entries(obj)` để lấy danh sách cặp `[key, value]`.
+  3. Dùng `.filter()` loại bỏ các phần tử có `value === null` hoặc `value === undefined` hoặc `value === ""`.
+  4. Dùng `Object.fromEntries()` để ráp ngược lại thành một object sạch sẽ.
+- **Keywords:** `object.entries object.fromentries typescript`, `sanitize dto remove empty fields`, `filter object key value`
+- **Input / Output Mẫu:**
+```typescript
+interface SearchQueryDto {
+  keyword: string;
+  category?: string | null;
+  minPrice?: number | null;
+  page: number;
+}
+
+const dirtyQuery: SearchQueryDto = {
+  keyword: "bàn phím",
+  category: null,
+  minPrice: undefined,
+  page: 1,
+};
+
+const cleanQuery = removeNullishFields(dirtyQuery);
+console.log(cleanQuery);
+// { keyword: "bàn phím", page: 1 } (Đã loại bỏ hoàn toàn category và minPrice!)
+```
+
+---
+
 ## 💡 Lời Khuyên Khi Luyện Tập
-1. **Mục tiêu 4 - 5 bài mỗi ngày:** Hoàn thành toàn bộ lộ trình 29 bài này chỉ trong **1 tuần** (khoảng 6 ngày).
+1. **Mục tiêu 4 - 5 bài mỗi ngày:** Hoàn thành toàn bộ lộ trình 30 bài cốt lõi này trong khoảng **6 - 7 ngày**.
 2. **Thực hành trực tiếp trên VSCode / TypeScript Playground:** Tự gõ lại code và thử các trường hợp đúng lẫn sai (`// @ts-expect-error`) để rèn luyện phản xạ.
-3. **Áp dụng ngay vào Project:** Sau khi hoàn thành Chặng 2 và Chặng 3, bạn đã đủ 100% tự tin để bắt tay vào xây dựng ngay dự án **React + Express / NestJS** với chuẩn Type Safety cao nhất!
+3. **Áp dụng ngay vào Project:** 30 bài này tập trung 100% vào những gì bạn sẽ viết và đọc mỗi ngày trong **React, Next.js và Express / NestJS** mà không hề có bất kỳ câu đố hàn lâm nào!

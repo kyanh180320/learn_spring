@@ -1,5 +1,6 @@
 package com.example.learn_spring.service.impl;
 
+import com.example.learn_spring.dto.api.PageResponse;
 import com.example.learn_spring.dto.request.ProductRequest;
 import com.example.learn_spring.dto.response.ProductResponse;
 import com.example.learn_spring.entity.Category;
@@ -11,6 +12,10 @@ import com.example.learn_spring.repository.CategoryRepository;
 import com.example.learn_spring.repository.ProductRepository;
 import com.example.learn_spring.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +31,31 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
 
     @Override
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream()
+    public PageResponse<ProductResponse> getAllProducts(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        // Chuyển page 1-indexed của client thành 0-indexed của Spring Data
+        int pageIndex = Math.max(page - 1, 0);
+        Pageable pageable = PageRequest.of(pageIndex, size, sort);
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return mapToPageResponse(productPage, page);
+    }
+
+    private PageResponse<ProductResponse> mapToPageResponse(Page<Product> productPage, int pageNo) {
+        List<ProductResponse> content = productPage.getContent().stream()
                 .map(productMapper::toResponse)
                 .collect(Collectors.toList());
+
+        return PageResponse.<ProductResponse>builder()
+                .content(content)
+                .pageNo(pageNo)
+                .pageSize(productPage.getSize())
+                .totalElements(productPage.getTotalElements())
+                .totalPages(productPage.getTotalPages())
+                .isLast(productPage.isLast())
+                .build();
     }
 
     @Override

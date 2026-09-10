@@ -1,6 +1,7 @@
 package com.example.learn_spring.controller;
 
 import com.example.learn_spring.dto.api.ApiResponse;
+import com.example.learn_spring.dto.api.PageResponse;
 import com.example.learn_spring.dto.request.ProductRequest;
 import com.example.learn_spring.dto.response.ProductResponse;
 import com.example.learn_spring.service.ProductService;
@@ -23,9 +24,17 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả sản phẩm")
-    public ApiResponse<List<ProductResponse>> getAllProducts() {
-        return ApiResponse.success(productService.getAllProducts());
+    @Operation(summary = "Lấy danh sách sản phẩm có phân trang và sắp xếp")
+    public ApiResponse<PageResponse<ProductResponse>> getAllProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        // Giới hạn max size phòng chống DoS (tối đa 100)
+        size = Math.min(size, 100);
+
+        return ApiResponse.success(productService.getAllProducts(page, size, sortBy, sortDir));
     }
 
     @GetMapping("/{id}")
